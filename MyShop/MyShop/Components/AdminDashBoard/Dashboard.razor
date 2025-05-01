@@ -1,0 +1,15 @@
+﻿@page "/admin/dashboard"
+
+
+
+<AuthorizeView>
+    <Authorized>
+        <div class="text-center">
+            <p class="p-5">
+                <h2>Hello, @context.User.Identity!.Name</h2>
+                <br />
+                <h3>Welcome to the admin dashboard</h3>
+            </p>
+        </div>
+    </Authorized>
+</AuthorizeView>

@@ -1,0 +1,114 @@
+﻿@implements IDisposable
+@rendermode InteractiveAuto
+
+
+ <div class="container">
+    <section>
+        <div class="head">
+            <h2>Featured Products</h2>
+        </div>
+        <div id="carouselExampleCaptions" class=" carousel slide" data-bs-ride="carousel">
+            <div class="carousel-indicators">
+                @for (int i = 0; i < (FeaturedProduct?.Count ?? 0); i++)
+                {
+                    <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="@i" class="@(i == 0 ? "active" : "")" aria-current="@(i == 0 ? "true" : "false")" aria-label="Slide @(i + 1)"></button>
+                }
+            </div>
+            <div class="featured-products">
+                <div class=" carousel-inner">
+                    @if (FeaturedProduct is not null)
+                    {
+                        bool isFirstItem = true;
+                        @foreach (Product product in FeaturedProduct.OrderByDescending(_ => _.CreatedDate).Take(5))
+                        {
+                            <div class="product carousel-item @(isFirstItem ? "active" : "")">
+                                
+                                <div class="img">
+                                    <div class="gradient"></div>
+                                    <img src="@product.ImageUrl" width="auto" height="400" class="float-end" style="cursor:pointer" @onclick="() => ViewProduct(product)" />
+                                </div>
+                                <div class="contents">
+                                    <div class="text-dark fw-bold display-2">
+                                        <p class="title">@product.Name</p>
+                                        <p class="price">
+                                            @product.Price.ToString($"₦#,##")
+                                        </p>
+                                        <button class="productbtn" @onclick="() => AddToCart(product)" data-after="Add To Cart">Add To Cart</button>
+                                    </div>
+                                </div>
+                            </div>
+                            isFirstItem = false;
+                        }
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">No Products Available.</div>
+                    }
+                </div>
+            </div>
+          
+        </div>
+    </section>
+ </div>      
+ 
+     
+ <style>
+
+     .contents{
+        display: flex;
+        justify-content: center;
+        margin: auto;
+     }
+
+    .productbtn {
+        border-radius: 5px;
+        font-size: 16px;
+        padding: 15px 50px;
+        background-color: blueviolet;
+        color: white;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 10px 10px #ff3c7644;
+        transition: background-color 0.3s;
+        display: flex;
+        margin: auto;
+    }
+ </style>
+          
+            
+
+@code{
+    private List<Product> FeaturedProduct { get; set; } = new();
+
+    public int PageSize { get; set; } = 5;
+    public int Skip { get; set; } = 0;
+    public int Take { get; set; } = 5;
+
+    protected async override Task OnInitializedAsync()
+    {
+        await LoadData();
+        // NavigationManager.Refresh(true);
+        ClientService.ProductAction += StateHasChanged;
+       
+    }
+
+    private async Task LoadData()
+    {
+        var product = await ClientService.GetFeaturedProductAsync();
+        FeaturedProduct = product;
+    }
+
+    private void ViewProduct(Product product) => NavigationManager.NavigateTo($"/products/{product.Name}");
+
+    private async Task AddToCart(Product model)
+    {
+        await ClientService.AddToCartAsync(model.Id);
+    }
+
+    public void Dispose()
+    {
+        
+        ClientService.ProductAction -= StateHasChanged;
+    }
+}

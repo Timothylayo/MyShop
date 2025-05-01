@@ -1,0 +1,19 @@
+﻿
+@rendermode @(new InteractiveAutoRenderMode (prerender: false))
+@implements IDisposable
+
+<a href="cart">
+    <i class="fi fi-rr-shopping-bag" data-count="@ClientService.CartCount"></i>
+    </a>
+
+@code {
+    protected async override Task OnInitializedAsync()
+    {
+        await ClientService.GetCartCount();
+        ClientService.CartAction += StateHasChanged;
+    }
+    public void Dispose()
+    {
+        ClientService.CartAction -= StateHasChanged;
+    }
+}

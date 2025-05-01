@@ -1,0 +1,190 @@
+﻿@page "/cart"
+
+
+@rendermode InteractiveAuto
+
+@implements IDisposable
+
+<h3>Shopping Cart</h3>
+@if (cartItem == null || cartItem.Count <= 0)
+{
+    <div style="text-align:center;">
+        <span>You have no items in your cart.</span>
+    </div>
+}
+else
+{
+    <div>
+        <table class="table table-bordered table-striped bg-light">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var items in cartItem)
+                {
+                    <tr>
+                        <td>
+                            <div class="py-2" style="display: grid;grid-template-columns: 60px auto; grid-column-gap: 5px">
+                                <img src="@items.ProduuctImageUrl" style="height: 60px; width: 60px; object-fit: cover" />
+                                <div>
+                                    <label class="mb-0 b-block"></label>
+                                    <a href="posts/@items.ProductName" target="_blank">@items.ProductName</a>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <InputNumber id="quantity" @bind-Value="items.Qty" min="1" max="@items.AvailableStock"
+                            @onclick="@(()=> UpdateCart(items))" class="form-control" style="width:70px" />
+                        </td>
+                        <td>@items.Price.ToString($"₦#,##")</td>
+                        <td>
+                            <button class="btn-checkout btn-danger" @onclick="(() => DeleteCartItemAsync(items))">Delete</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <div style="text-align:left;margin:0px;">
+            Payment Mode:
+            <EditForm Model="paymentModel" >
+                <InputRadioGroup @bind-Value="paymentModel.Name">
+                    @foreach (var option in paymentOptions)
+                    {
+                        <InputRadio id="@option" Value="@option" />
+                        <label for="@option">@option</label>
+                    }
+                </InputRadioGroup>
+            </EditForm>
+        </div>
+        <div class="item-price">
+            ShipingCharges: @ShippingCharges.ToString($"₦#,##")
+        </div>
+        <div class="item-price">
+            Total: @finalTotal.ToString($"₦#,##")
+        </div>
+        <div class="button" style="text-align:end">
+            <button class="btn-checkout" @onclick="PlaceOrder">
+                Proceed to Checkout
+            </button>
+        </div>
+    </div>
+}
+
+
+
+
+
+@code {
+    List<CartItemDto> cartItem = new();
+    public decimal SubTotal { get; set; }
+    public decimal ShippingCharges { get; set; }
+    public decimal finalTotal { get; set; }
+    public string? paymentMode { get; set; }
+    public bool IsUserLoggedIn = false;
+
+    PaymentModeModel paymentModel = new PaymentModeModel()
+        {
+            Name = "CashOnDelivery" // default value
+        };
+
+    List<string> paymentOptions = new() { "CashOnDelivery", "Stripe" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        SubTotal = 0;
+        ShippingCharges = 1500;
+        cartItem = await ClientService.GetCartItems();
+        paymentMode = "CashOnDelivery";
+        foreach (var cart_item in cartItem)
+        {
+            SubTotal = SubTotal + (cart_item.Price * cart_item.Qty);
+        }
+        finalTotal = SubTotal + ShippingCharges;
+        ClientService.CartAction += StateHasChanged;
+    }
+
+    async Task DeleteCartItemAsync(CartItemDto item)
+    {
+        bool confirm = await js.InvokeAsync<bool>("confirm", "Are you sure you want to delete this from the cart");
+        if (!confirm) return;
+        await ClientService.RemoveItem(item.CartId, item.ProductId);
+        cartItem = await ClientService.GetCartItems();
+        await ClientService.GetCartCount();
+    }
+
+    private async Task<List<CartItemDto>> UpdateCart(CartItemDto cartItem)
+    {
+        await ClientService.UpdateItem(cartItem);
+        return await ClientService.GetCartItems();
+    }
+
+    public string GetCartId()
+    {
+        string userId;
+        if (JWTModel.JWTToken == null)
+        {
+            return string.Empty;
+        }
+        else
+        {
+            var user = DecryptJwtToken.GetClaims(JWTModel.JWTToken);
+            userId = user.id;
+        }
+        return userId;
+    }
+    private async Task PlaceOrder()
+    {
+
+        if (cartItem != null && cartItem.Count > 0)
+        {
+            if (paymentModel.Name == "Stripe")
+            {
+                string checkoutUrl = await ClientService.Checkout();
+                NavigationManager.NavigateTo(checkoutUrl);
+            }
+            else if (paymentModel.Name == "CashOnDelivery")
+            {
+                cartItem.FirstOrDefault()!.ShippingCharges = ShippingCharges;
+                cartItem.FirstOrDefault()!.SubTotal = SubTotal;
+                cartItem.FirstOrDefault()!.PaymentMode = paymentMode;
+
+                IsUserLoggedIn = ClientService.IsUserLoggedIn();
+                if (IsUserLoggedIn)
+                {
+                    var user = DecryptJwtToken.GetClaims(JWTModel.JWTToken);
+                    if (user is null)
+                        NavigationManager.NavigateTo("account/login");
+                    else
+                        cartItem.FirstOrDefault()!. CartId = user.id;
+                    var response = await ClientService.Checkout(cartItem);
+                    if (response != null)
+                    {
+                        cartItem.Clear();
+                        NavigationManager.NavigateTo("account/myAccount");
+                    }
+                }
+                else
+                {
+                    NavigationManager.NavigateTo("account/login");
+                }
+
+            }
+            await ClientService.EmptyCart();
+        }
+        else
+        {
+            await js.InvokeVoidAsync("alert", "Your cart is empty");
+        }
+    }
+
+    public void Dispose()
+    {
+        ClientService.CartAction -= StateHasChanged;
+    }
+    
+}

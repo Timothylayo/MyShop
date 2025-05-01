@@ -1,0 +1,55 @@
+﻿.card-header .btn {
+    padding: 10px 30px;
+    font-size: 10px;
+    font-weight: 800;
+    transition: none;
+    transform: none;
+    text-transform: none;
+    box-shadow: none;
+    background-color: none;
+    color: none;
+}
+
+    .card-header .btn::after {
+        content: attr(data-after);
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: none;
+        width: none;
+        height: none;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        color: none;
+        background-color: none;
+        transition: none;
+    }
+
+.card-body .btn {
+    padding: 15px 50px;
+    font-size: 10px;
+    font-weight: 800;
+    transition: none;
+    transform: none;
+    text-transform: none;
+    box-shadow: none;
+    background-color:;
+    color: none;
+}
+
+    .card-body .btn::after {
+        content: attr(data-after);
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: none;
+        width: none;
+        height: none;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        color: none;
+        background-color: none;
+        transition: none;
+    }

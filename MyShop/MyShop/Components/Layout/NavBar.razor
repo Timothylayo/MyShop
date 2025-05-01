@@ -1,0 +1,104 @@
+﻿
+<style>
+    .divright {
+        float: right;
+        padding: 10px 20px;
+    }
+
+    .btn-logout {
+        background: none;
+        border: none;
+        padding: 0px;
+        color: red;
+        font-size: 12px;
+    }
+
+    .logo {
+        color: var(--color-magenta);
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 32px;
+        font-weight: 900;
+    }
+</style>
+
+ <!-- NAVBAR -->
+<div class="navbar">
+    <div class="container">
+        <nav>
+            <div class="logo" >
+                <a href="/">
+                <strong>BlinkyBill</strong>
+                </a>
+            </div>
+            <ul >
+                <SearchComponent />
+            </ul>
+           
+            <div class="icons">
+                <div class="dropdown" style="cursor:pointer;">
+                    <AuthorizeView>
+                        <Authorized>
+                            <span class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fi fi-rr-user"></i><span>Welcome, @context.User.Identity!.Name</span>
+                            </span>
+
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="/account/myAccount">Account Page</a></li>
+                                <li><a class="dropdown-item" href="/account/myOrders">Manage Orders</a></li>
+                                <li><LogoutComponent /></li>
+                                <li>
+                                    <a href="admin/dashboard">Admin Panel</a>
+                                </li>
+                            </ul>
+                        </Authorized>
+                        <NotAuthorized>
+                            <span class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fi fi-rr-user"></i><span>Welcome, Guest</span>
+                            </span>
+
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="account/login">Login</a></li>
+                                <li><a class="dropdown-item" href="account/register">Register</a></li>
+                            </ul>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                    
+                </div>
+                
+                
+                <CartCount/>
+               
+                <!-- hambtn -->
+                <i class="fi fi-rr-menu-burger hamburger open"></i>
+                <i class="fi fi-rr-cross hamburger close"></i>
+            </div>
+        </nav>
+    </div>
+</div>
+
+
+
+@code {
+    public int cartCount = 0;
+
+    
+    
+    private void Login()
+    {
+        NavigationManager.NavigateTo("/account/login", forceLoad: true);
+    }
+    private void Register()
+    {
+        NavigationManager.NavigateTo("/account/register", forceLoad: true);
+    }
+
+    private void Logout()
+    {
+        var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
+        customAuthStateProvider.UpdateAuthenticationState(null!);
+        NavigationManager.NavigateTo("/", forceLoad: true);
+    }
+
+
+    
+}

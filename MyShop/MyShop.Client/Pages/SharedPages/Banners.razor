@@ -1,0 +1,35 @@
+﻿<div class="banner">
+    <div class="container">
+        <div class="inner">
+            <div class="left">
+                <img src="assets/images/14promax.png" alt="" />
+                <div class="content">
+                    <span>accessories</span>
+                    <h2>Cases</h2>
+                    <p>We receive new Cases every day. Just take your pick.</p>
+                    <button class="btn" data-after="Shop-Now" @onclick="() => AddToCart(product)">Shop Now</button>
+                </div>
+            </div>
+            <div class="right">
+                <img src="assets/images/sam24ul.png" alt="" />
+                <div class="content">
+                    <span>Device</span>
+                    <h2>Samsung</h2>
+                    <p>We receive new premuim devices every day. Just take your pick.</p>
+                    <button class="btn" data-after="Shop-Now" @onclick="() => AddToCart(product)">Shop Now</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code{
+    public Product product = new();
+
+
+    private async Task AddToCart(Product model)
+    {
+        await ClientService.AddToCartAsync(model.Id);
+    }
+}

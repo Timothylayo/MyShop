@@ -1,0 +1,35 @@
+﻿<div class="overlay"></div>
+<div class="loader-wrapper fullscreen-fixed d-flex justify-content-center align-items-center">
+    <div class="bg-white p-2 rounded shadow-lg">
+        <button class="btn btn-primary" type="button" disabled>
+            <span class="spinner-grow spinner-grow-sm" aria-hidden="true"></span>
+            <span role="status">@LoaderText...</span>
+        </button>
+        
+    </div>
+
+</div>
+
+<style type="text/css">
+    .fullscreen-fixed {
+        position: fixed;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+    }
+
+    .overlay {
+        background: black;
+        opacity: 0.5;
+        z-index: 1050;
+    }
+
+    .loader-wrapper {
+        z-index: 1051;
+    }
+</style>
+@code {
+    [Parameter]
+    public string? LoaderText { get; set; } = "Loading...";
+}

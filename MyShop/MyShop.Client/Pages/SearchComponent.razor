@@ -1,0 +1,42 @@
+﻿@using Blazored.Typeahead
+@rendermode @(new InteractiveAutoRenderMode(prerender:false))
+
+
+<BlazoredTypeahead SearchMethod="SearchProduct" TValue="Product"
+TItem="Product"
+Value="selectedProduct"
+ValueChanged="HandleSearch"
+ValueExpression="@(() => selectedProduct)"
+placeholder="Search....">
+    <SelectedTemplate>
+        @context!.Name
+    </SelectedTemplate>
+    <ResultTemplate>
+        @context!.Name
+    </ResultTemplate>
+    <NotFoundTemplate>
+        Sorry, Product not available.
+    </NotFoundTemplate>
+</BlazoredTypeahead>
+
+
+@code {
+    public Product? selectedProduct;
+
+    private async Task<IEnumerable<Product>> SearchProduct(string text) 
+    {
+        var response = await ClientService.GetProductByTextInput(text);
+        return response!;
+    }
+
+    private void HandleSearch(Product product)
+    {
+        if (product == null) return;
+
+        selectedProduct = product;
+        NavigationManager.NavigateTo($"posts/{selectedProduct.Name}");
+    }
+
+
+}
+

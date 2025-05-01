@@ -1,0 +1,234 @@
+﻿@page "/admin/manage/orders"
+@rendermode InteractiveServer
+
+<PageTitle>Manage Orders</PageTitle>
+
+<style>
+    .modal {
+        position: fixed;
+        z-index: 10;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background-color: rgb(0,0,0);
+        background-color: rgb(0,0,0,0.4);
+        display: grid;
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 50%;
+        overflow: hidden;
+    }
+
+    .close {
+        color: #aaaaaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+</style>
+
+<div class="container">
+    <div class="card">
+        <h4 class="card-header">Manage Orders</h4>
+
+        <div class="card-body">
+            @if (isLoading)
+            {
+                <LoadingPage LoaderText="@loadingText" />
+            }
+            else
+            {
+                @if (customerOrders != null)
+                {
+                    <QuickGrid Items="customerOrders!.AsQueryable()" Pagination="@pagination" class="table table-bordered table-striped table-hover">
+                        <PropertyColumn Property="@(c => c.OrderId)" Title="Order" Sortable="true" Align="Align.Center" />
+                        <PropertyColumn Property="@(c => c.TotalPrice.ToString("₦#,##"))" Title="Total" Align="Align.Center" />
+                        <PropertyColumn Property="@(c => c.CreatedDate)" Title="Order Date" Align="Align.Center" />
+                        <TemplateColumn Align="Align.Center" Title="Track">
+                            <input type="button" class="btn btn-Primary" value="Track" @onclick="(() => UpdateShippingStatus(context))" />
+                        </TemplateColumn>
+                        <TemplateColumn Align="Align.Center" Title="Details">
+                            <input type="button" class="btn btn-primary" value="Detail" @onclick="(() => GetOrderDetails(context.OrderId!))" />
+                        </TemplateColumn>
+                    </QuickGrid>
+                }
+            }
+        </div>
+        <div class="card-footer">
+            <Paginator State="pagination" />
+        </div>
+    </div>
+</div>
+
+
+
+@if (showTrackOrder == true)
+{
+    <div class="modal align-contents-center">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5>Track Order</h5>
+                <span class="close" @onclick="ToggleTrackOrderPopup">&times;</span>
+            </div>
+            <div class="modal-body">
+                <EditForm Model="model" OnValidSubmit="UpdateOrderStatus">
+                    <DataAnnotationsValidator/>             
+                    <div class="form-body mb-3">
+                        <label class="form-label">Name</label>
+                        <InputText @bind-Value="model!.ShippingStatus" class="form-control" placeholder="Enter Name" />
+                        <ValidationMessage For="() => model.ShippingStatus" class="text-danger" />
+
+                    </div>
+                </EditForm>
+            </div>
+            <div class="modal-footer">
+                <input type="button" class="btn btn-primary" value="UpdateStock" @onclick="UpdateOrderStatus" />
+                <input type="button" class="btn btn-primary" value="Close" @onclick="ToggleTrackOrderPopup" />
+            </div>
+        </div>
+    </div>
+}
+
+@if (showOrderDetail == true)
+{
+    <div class="modal align-contents-center">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5>Order Details</h5>
+                <span class="close" @onclick="ToggleOrderDetailPopup">&times;</span>
+            </div>
+            <div class="modal-body">
+                @if (myCart != null && myCart.Count > 0)
+                {
+                    <table class="table table-bordered">
+                        @foreach (var cart in myCart)
+                        {
+                            <tr>
+                                <td style="padding:0px;">
+                                    <img src="@cart.ProduuctImageUrl" alt="@cart.ProductName" style="width:50px;" />
+                                    <div>
+                                        <p>@cart.ProductName</p>
+                                    </div>
+                                </td>
+                                <td style="padding:0px;">@cart.Qty & @cart.Price</td>
+                                <td style="padding:0px;">₦@(cart.Price * cart.Qty)</td>
+                            </tr>
+                        }
+                    </table>
+
+                    <table style="width:550px; border: 1px ridge #f5750d;">
+                        <tr>
+                            <td>Subtotal - @subTotal.ToString("₦#,##")</td>
+                            <td>ShippingCharges - @shippingCharges.ToString("₦#,##")</td>
+                        </tr>
+                        <tr>
+                            <td>Total - @finalTotal.ToString("₦#,##")</td>
+                            <td>Shipping Address - @shippingAddress</td>
+                        </tr>
+                        <tr>
+                            <td>PaymentMode - @paymentMode</td>
+                        </tr>
+                    </table>
+                }
+            </div>
+            <div class="modal-footer">
+                <input type="button" class="btn btn-primary" value="Close" @onclick="ToggleOrderDetailPopup" />
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private int userKey;
+    private bool showTrackOrder = false;
+    private bool showOrderDetail = false;
+    public List<CartItemDto>? myCart { get; set; }
+    public string? shippingAddress { get; set; }
+    public decimal shippingCharges { get; set; }
+    public string? paymentMode { get; set; }
+    public decimal subTotal { get; set; }
+    public decimal finalTotal { get; set; }
+    public List<string>? shippingUpdates { get; set; }
+
+    private bool isLoading;
+    private string? loadingText;
+
+    PaginationState pagination = new PaginationState { ItemsPerPage = 5 };
+    private List<OrderDTO>? customerOrders { get; set; } 
+
+    private OrderDTO? model;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        customerOrders = await AdminService.GetOrders();
+
+    }
+
+    private async Task GetOrderDetail(string order_number)
+    {
+        myCart = await AdminService.GetOrderDetails(order_number);
+
+        if (myCart != null && myCart.Count > 0)
+        {
+            shippingAddress = myCart.FirstOrDefault()!.ShippingAddress;
+            shippingCharges = myCart.FirstOrDefault()!.ShippingCharges;
+            subTotal = myCart.FirstOrDefault()!.SubTotal;
+            finalTotal = myCart.FirstOrDefault()!.Total;
+            paymentMode = myCart.FirstOrDefault()!.PaymentMode;
+
+        }
+    }
+
+    async Task UpdateOrderStatus()
+    {
+        // var message = await AdminService.UpdateShippingStatus(model!);
+        // ToggleTrackOrderPopup();
+    }
+
+
+    private async void UpdateShippingStatus(OrderDTO order)
+    {
+        model = order;
+        // string orderNumber = order.OrderId!;
+        // var status = await accountService.GetShippingStatus(orderNumber);
+
+        // model.ShippingStatus = status!.ShippingStatus;
+        ToggleTrackOrderPopup();
+    }
+    private void ToggleTrackOrderPopup()
+    {
+        showTrackOrder = showTrackOrder == true ? false : true;
+    }
+
+    private void ToggleOrderDetailPopup()
+    {
+        showOrderDetail = showOrderDetail == true ? false : true;
+    }
+
+    private async Task GetOrderDetails(string order_number)
+    {
+        await GetOrderDetail(order_number);
+        ToggleOrderDetailPopup();
+    }
+
+    async Task GetOrder()
+    {
+         customerOrders = await AdminService.GetOrders();   
+    }
+
+}

@@ -1,0 +1,121 @@
+﻿@page "/admin/manage/categories"
+
+
+@rendermode InteractiveServer
+
+<PageTitle>Manage Categories</PageTitle>
+
+
+
+
+@if(isLoading is true)
+{
+    <LoadingPage LoaderText="@loadingText" />
+}
+else{
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-2"></div>
+            <div class="card">
+                <div class="card-header">
+                    <AdminHeader Title="Manage Categories" />
+                    <EditForm Model="Model" OnSubmit="SaveCategoryAsync" Enhance>
+                        <DataAnnotationsValidator />
+                        <div class="hstack gap-2">
+                            <label class="form-label">Category Name</label>
+                            <InputText @bind-Value="Model!.Name" class="form-control form-control-sm" placeholder="Category Name" />
+                            <ValidationMessage For="()=> Model.Name" />
+                            <button type="submit" class="btn  mb-2">Save</button>
+                        </div>
+                    </EditForm>
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered table-striped bg-light">
+                        <thead>
+                            <tr>
+                                <th style="width:15px;">S/N</th>
+                                <th> Name</th>
+                                <th style="width:80px;">Edit?</th>
+                                <th style="width:80px;">Delete?</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var (index, category) in Categories!.Select((category, i) => (i + 1, category)))
+                            {
+                                <tr>
+                                    <td>@index</td>
+                                    <td>@category.Name</td>
+                                    <td>
+                                        <button class="btn " @onclick="(async () => EditCatgeoryAsync(category))">Edit</button>
+                                    </td>
+                                    <td>
+                                        <button class="btn " @onclick="(async () => await DeleteCategoryAsync(category.Id))">Delete</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer"><Paginator State="@pagination" /></div>
+            </div>
+        </div>    
+    </div>
+}
+
+
+
+
+
+@code {
+    PaginationState pagination = new PaginationState { ItemsPerPage = 7};
+
+    //Category[] Categories = [];
+
+    [SupplyParameterFromForm]
+    private Category? Model { get; set; } = new();
+
+    private bool isLoading;
+    private string? loadingText;
+    //private IQueryable<Category> Categories = Enumerable.Empty<Category>().AsQueryable();
+    private List<Category>? Categories { get; set; }
+
+    protected override async Task OnInitializedAsync() => await GetCategoryAsync();
+
+    private async Task GetCategoryAsync()
+    {
+        loadingText = "Fetching catgegories";
+        isLoading = true;
+        var categories = await AdminService.GetCategoriesAsync();
+        Categories = categories!;
+
+        isLoading = false;
+    }
+
+    private void EditCatgeoryAsync(Category category)
+    {
+        Model = category.Clone();
+    }
+
+    private async Task DeleteCategoryAsync(int id)
+    {
+        bool forceReload = true;
+        await AdminService.DeleteCategory(id);
+        NavigationManager.Refresh(forceReload);
+
+    }
+
+    private async Task SaveCategoryAsync()
+    {
+        if (Model == null) return;
+        await AdminService.AddCatgeoryAsync(Model!);
+        await GetCategoryAsync();
+    }
+
+    public void GetProtectedClient()
+    {
+        if (JWTModel.JWTToken == "") return;
+        httpClient.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", JWTModel.JWTToken);
+    }
+
+}

@@ -1,0 +1,45 @@
+﻿<div class="best-selling">
+    <section>
+        <div class="container">
+            <div class="head">
+                <h2>Best Selling Product</h2>
+                <a href="#">
+                    <span>View all</span>
+                    <i class="fi fi-rr-arrow-right"></i>
+                </a>
+            </div>
+            <div class="inner">
+                <div class="gradient"></div>
+                <div class="container">
+                    <div class="left">
+                        <img src="assets/images/sam24ul.png" alt="" />
+                    </div>
+                    <div class="right">
+                        <div class="content">
+                            <div class="rating">
+                                <i class="fi fi-ss-star star star-filled"></i>
+                                <i class="fi fi-ss-star star star-filled"></i>
+                                <i class="fi fi-ss-star star star-filled"></i>
+                                <i class="fi fi-ss-star star star-filled"></i>
+                                <i class="fi fi-ss-star star"></i>
+                            </div>
+                            <h5 class="title">
+                                Samsung S24Ultra
+                            </h5>
+                            <h5 class="price">$120.50</h5>
+                            <button class="btn" data-after="Show Now" @onclick="() => AddToCart(product)">shop now</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+@code{
+    Product product { get; set; } = new();
+
+    private async Task AddToCart(Product model)
+    {
+        await ClientService.AddToCartAsync(model.Id);
+    }
+}

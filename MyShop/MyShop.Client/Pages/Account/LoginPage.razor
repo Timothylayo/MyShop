@@ -1,0 +1,75 @@
+﻿@page "/account/login"
+
+
+@rendermode InteractiveServer
+
+<style>
+    .input-box {
+        border-radius: 4px;
+        background: #ffffff;
+        border: #ccc 2px solid;
+        padding: 5px;
+        width: 250px;
+        color: #525252;
+        margin-top: 10px;
+        font-size: 1em;
+    }
+
+    .btn-forgot {
+        background: none;
+        border: none;
+        padding: 0px;
+        color: blueviolet;
+        font-size: 12px;
+    }
+</style>
+
+
+<PageTitle>Login</PageTitle>
+
+<div style="min-height: 400px;">
+    <div class="loginBox">
+        <div class="box">
+            <h1>Login</h1>
+            @if (Model != null)
+            {
+                <EditForm Enhance Model="Model" method="post" OnValidSubmit="LoginUser" FormName="Login">
+                    <DataAnnotationsValidator />
+
+                    <InputText @bind-Value="Model.Email" class="input-box" type="email" placeholder="John@name.com" />
+                    <ValidationMessage For="() => Model.Email" class="text-danger" />
+        
+                    <InputText type="password" class="input-box" @bind-Value="Model.Password" placeholder="password" />
+                    <ValidationMessage For="() => Model.Password" class="text-danger" />
+                    <input type="submit" class="btn-login" value="Login"/>
+                    <a href="/account/register"><div id="btn-register">Register</div></a>
+                    <a href="/account/forgotpassowrd"><div class="btn-forgot">Forgot Password</div></a>
+                </EditForm>
+            }
+        </div>
+    </div>
+
+</div>
+
+
+@code {
+
+    [SupplyParameterFromForm]
+    private LoginDTO Model { get; set; } = new();
+
+
+    public async Task LoginUser()
+    {
+        var response = await ClientService.LoginUserAsync(Model);
+        if (!response.Flag)
+        {
+            return;
+        }
+        else
+        {
+            var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
+            customAuthStateProvider.UpdateAuthenticationState(response.Token);
+            NavigationManager.NavigateTo("/", forceLoad: true);
+        }
+    }
+}

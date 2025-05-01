@@ -1,0 +1,90 @@
+﻿@rendermode InteractiveAuto
+
+<style>
+    section {
+        margin:  0;
+       
+    }
+    .section {
+        padding-block: var(--section-padding);
+        background-color: whitesmoke;
+    }
+    .hero {
+        
+        background-repeat: no-repeat;
+        background-size: cover;
+        background-position: left;
+        height:100%;
+        display: flex ;
+        flex-direction: row-reverse;
+        justify-content: flex-start;
+        align-items: center;
+    }
+
+    .productImg {
+        max-height: 100%;
+        width: 100%;
+        border-radius: 6px;
+        margin: auto;
+        
+    }
+
+    .hero-title {
+        margin-bottom: 10px;
+    }
+
+        .hero-title > strong {
+            display: block;
+        }
+
+    .hero-text {
+        color: var(--onyx);
+        font-family: var(--ff-roboto);
+        font-size: var(--fs-8);
+        line-height: 1.8;
+        max-width: 46ch;
+        margin-bottom: 25px;
+    }
+
+</style>
+
+<section class="section hero" >
+    
+    <img class="productImg" src="assets/images/sam24ul.png" alt="" />
+
+    
+    <div class="container">
+        <h2 class="h1 hero-title">
+            New Released <strong>Phones Collection</strong>
+        </h2>
+
+        <p class="hero-text">
+            Competently expedite alternative benefits whereas leading-edge catalysts for change. Globally leverage
+            existing an
+            expanded array of leadership.
+        </p>
+
+
+        <button class="btn btn-primary" @onclick="ProductPage">
+            <span>Shop Now</span>
+
+            <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
+        </button>
+
+    </div>
+</section>
+
+@code {
+    Product product = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var products = await ClientService.GetAllProductAsync();
+        product = products.Take(1).FirstOrDefault()!;
+    }
+
+    void ProductPage()
+    {
+         NavigationManager.NavigateTo("/product");
+    }
+}

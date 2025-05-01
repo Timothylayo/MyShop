@@ -1,0 +1,175 @@
+﻿@page "/admin/stock"
+@rendermode InteractiveAuto
+
+<style>
+    .modal {
+        position: fixed;
+        z-index: 10;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background-color: rgb(0,0,0);
+        background-color: rgb(0,0,0,0.4);
+        display: grid;
+    }
+    .modal-content {
+        background-color: #fefefe;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 50%;
+        overflow: hidden;
+    }
+
+    .close {
+        color: #aaaaaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+</style>
+
+<div class="card">
+    <h4 class="card-header">Stock</h4>
+
+    <div class="card-body">
+        @if (isLoading)
+        {
+            <LoadingPage LoaderText="@loadingText" />
+        }
+        else
+        {
+            <table class="table table-bordered table-striped bg-light">
+                <thead>
+                    <tr>
+                        <th style="width:15px;">S/N</th>
+                        <th> Name</th>
+                        <th> Stock</th>
+                        <th> CategoryName</th>
+                        <th style="width:80px;">AddStock?</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var (index, stock) in stocks!.Select((stock, i) => (i + 1, stock)))
+                    {
+                        <tr>
+                            <td>@index</td>
+                            <td>@stock.Name</td>
+                            <td>@stock.Stock</td>
+                            <td>@stock.CategoryName</td>
+                            <td>
+                                <input type="button" class="btn btn-info" value="AddStock" @onclick="(() => AddStock(stock))" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+        }
+    </div>
+</div>
+
+@if (showAddPopup == true)
+{
+    <div class="modal align-contents-center">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5>Add Product Stock</h5>
+                <span class="close" @onclick="ToggleAddPopup">&times;</span>
+            </div>
+            <div class="modal-body">
+                <EditForm Model="stock" OnValidSubmit="UpdateStock">
+                    <DataAnnotationsValidator />
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label>Product Name :</label>
+                            <label>@stock.Name</label>
+                        </div>
+                        <div class="form-group col-6">
+                            <label>Availiable Stock :</label>
+                            <label>@stock.Stock</label>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            New Stock :
+                            <InputNumber @bind-Value="stock.NewStock" class="form-control"/>
+                            <ValidationMessage For = "@(() => stock.NewStock)" />
+                        </div>
+                        <div class="form-group col-6">
+                            <label>Total Stock :</label>
+                            <br/>
+                            <label>@(stock.Stock + stock.NewStock)</label>
+                        </div>
+                    </div>
+                </EditForm>
+            </div>
+            <div class="modal-footer">
+                <input type="button" class="btn btn-primary" value="UpdateStock" @onclick="UpdateStock" />
+                <input type="button" class="btn btn-primary" value="Cancel" @onclick="ToggleAddPopup" />
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool isLoading;
+    private string? loadingText;
+    public bool showAddPopup = false;
+    string? Message;
+
+    PaginationState pagination = new PaginationState { ItemsPerPage = 7 };
+
+    //private IQueryable<StockModel> stocks = Enumerable.Empty<StockModel>().AsQueryable();
+    private List<StockModel>? stocks { get; set; }
+
+    private StockModel stock { get; set; } = new();
+    protected async  override Task OnInitializedAsync()
+    {
+        isLoading = true;
+        loadingText = "Getting Stock";
+        StateHasChanged();
+        await GetProductStock();
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task GetProductStock()
+    {
+        stocks = await AdminService.GetProductStock();
+    }
+    private void ToggleAddPopup()
+    {
+        showAddPopup = showAddPopup == true ? false : true;
+    }
+
+    private void AddStock(StockModel _stock)
+    {
+        stock = _stock;
+        ToggleAddPopup();
+    }
+    private async Task UpdateStock()
+    {
+        bool flag = await AdminService.UpdateProductStock(stock);
+        ToggleAddPopup();
+        if (flag)
+        {
+            Message = "Product Stock Updated Successfully !!";
+        }
+        else
+        {
+            Message = "Product Stock Not Updated Try Again !!";
+        }
+        //await ToggleSuccessPopup();
+        await GetProductStock();
+    }
+}

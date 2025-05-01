@@ -1,0 +1,130 @@
+﻿@page "/admin/manage/products"
+
+@inject HttpClient httpClient
+<PageTitle>Manage Product</PageTitle>
+@rendermode InteractiveServer
+
+
+<div class="card">
+    <div class="card-header">
+        <AdminHeader Title="Manage Product">
+            <ActionButtons>
+                <a href="add-product/new" class="btn btn-primary btn-sm" data-enhance-nav="false">+ Add New Product</a>
+            </ActionButtons>
+        </AdminHeader>
+    </div>
+    <div class="card-body">
+
+        @if (isLoading)
+        {
+            <LoadingPage LoaderText="@loadingText" />
+        }
+        else
+        {
+            <table class="table table-bordered table-striped bg-light">
+                <thead>
+                    <tr>
+                        <th style="width:15px;">S/N</th>
+                        <th> Name</th>
+                        <th> Number</th>
+                        <th> Price</th>
+                        <th> Stock</th>
+                        <th> Category</th>
+                        <th> Active</th>
+                        <th style="width:80px;">Edit?</th>
+                        <th style="width:80px;">Delete?</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var(index,prod) in Product!.Select((prod, i) => (i + 1, prod)))
+                    {
+                        <tr>
+                            <td>@index</td>
+                            <td>
+                                <div class="py-2" style="display: grid;grid-template-columns: 60px auto; grid-column-gap: 5px">
+                                    <img src="@prod.ImageUrl" style="height: 60px; width: 60px; object-fit: cover" />
+                                    <div>
+                                        <label class="mb-0 b-block"></label>
+                                            @if (prod.IsActive)
+                                            {
+                                            <a href="posts/@prod.Name" target="_blank">@prod.Name</a>
+                                            }
+                                            else
+                                            {
+                                            <label>@prod.Name</label>
+                                            }
+                                    </div>
+                                </div>
+                            </td>
+                                <td>@prod.ProdNum</td>
+                                <td>@prod.Price.ToString("₦#,##")</td>
+                                <td>@prod.Quantity</td>
+                                <td>@prod.Category!.Name</td>
+                            <td>
+                                    @if (prod.IsActive)
+                                    {
+                                    <label class="text-success">
+                                        <input type="checkbox" @onchange="@(()=> HandleIsActiveChanged(prod))" checked /> Yes
+                                    </label>
+                                    }
+                                    else
+                                    {
+                                    <label class="text-danger">
+                                        <input type="checkbox" @onchange="@(()=> HandleIsActiveChanged(prod))" /> No
+                                    </label>
+                                    }
+                            </td>
+                            <td>
+                                <a href="/edit-product/@prod.Id" class="btn btn-info">Edit</a>
+                            </td> 
+                            <td>
+                                <button class="btn btn-danger" @onclick="(() => DeletProductAsync(prod.ProdNum!))">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+    <div class="card-footer"><Paginator State="@pagination"/></div>
+</div>
+
+
+
+
+
+@code {
+    private bool isLoading;
+    private string? loadingText;
+
+    PaginationState pagination = new PaginationState { ItemsPerPage = 7 };
+
+    private List<Product>? Product { get; set; }
+    //private IQueryable<Product> Products = Enumerable.Empty<Product>().AsQueryable();
+
+    protected async override Task OnInitializedAsync()
+    {
+        isLoading = true;
+        loadingText = "Getting Products";
+        StateHasChanged();
+        var products = await AdminService.GetAllProductAsync();
+        Product = products;
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task HandleIsActiveChanged(Product product)
+    {
+        product.IsActive = !product.IsActive;
+        await AdminService.UpdateProduct(product);
+    }
+
+    private async Task DeletProductAsync(string id)
+    {
+        bool confirm = await js.InvokeAsync<bool>("confirm", "Are you sure you want to delete this product");
+        if (!confirm) return;
+        bool forceReload =  true ;
+        await AdminService.DeleteProduct(id);
+        NavigationManager.Refresh(forceReload);
+    }
+}

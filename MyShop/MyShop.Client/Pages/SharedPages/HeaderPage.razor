@@ -1,0 +1,59 @@
+﻿<style>
+    .section {
+        padding-block: var(--section-padding);
+    }
+
+    .hero {
+        background-repeat: no-repeat;
+        background-size: cover;
+        background-position: left;
+        min-height: 500px;
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+    }
+
+    .hero-title {
+        margin-bottom: 10px;
+    }
+
+        .hero-title > strong {
+            display: block;
+        }
+
+    .hero-text {
+        color: var(--onyx);
+        font-family: var(--ff-roboto);
+        font-size: var(--fs-8);
+        line-height: 1.8;
+        max-width: 46ch;
+        margin-bottom: 25px;
+    }
+
+</style>
+
+<section class="section hero" style="background-image: url('./assets/images/hero-banner.png')">
+    <div class="container">
+
+        <h2 class="h1 hero-title">
+            New Summer <strong>Shoes Collection</strong>
+        </h2>
+
+        <p class="hero-text">
+            Competently expedite alternative benefits whereas leading-edge catalysts for change. Globally leverage
+            existing an
+            expanded array of leadership.
+        </p>
+
+        <button class="btn btn-primary">
+            <span>Shop Now</span>
+
+            <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
+        </button>
+
+    </div>
+</section>
+
+@code {
+
+}

@@ -1,0 +1,69 @@
+﻿@page "/posts/{name}"
+
+<PageTitle>@product.Name</PageTitle>
+@rendermode InteractiveAuto
+
+
+@if (isLoading)
+{	
+	<LoadingPage LoaderText="loading" />
+}
+else
+{
+    <div class="product">
+        <img class="productImg" src="@product!.ImageUrl" alt="@product.Name" />
+        <div class="productDetails">
+            <h1 class="productTitle">@product.Name</h1>
+            <p class="productDescription">@product.Description</p>
+            @if (product.OriginalPrice > product.Price)
+            {
+                <h6 class="text-muted original-price">
+                    @product.OriginalPrice.ToString($"₦#,##")
+                </h6>
+            }
+            <h2 class="price">
+                @product.Price.ToString($"₦#,##")
+            </h2>
+
+            <button class="productbtn" @onclick="() => AddToCart(product)" data-after="Add To Cart">Add To Cart</button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string? Name { get; set; }
+
+    public bool isLoading;
+    public string? loaderText;
+    public string? Description { get; set; }
+
+    private Product product = new();
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        loaderText = "Getting Product Details";
+        StateHasChanged();
+        var products = await ClientService.GetProductDescription(Name!);
+        product = products!;
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task AddToCart(Product model)
+    {
+        await ClientService.AddToCartAsync(model.Id);
+    }
+
+    private string GetViewString()
+    {
+        if (product.ViewCount > 1000000)
+            return $"{((float)product.ViewCount / 1000000).ToString("#.##")}M";
+        if (product.ViewCount > 100000)
+            return $"{((float)product.ViewCount / 1000).ToString("#")}K";
+        if (product.ViewCount > 1000)
+            return $"{((float)product.ViewCount / 1000).ToString("#.##")}K";
+
+        return product.ViewCount.ToString("0##");
+    }
+}

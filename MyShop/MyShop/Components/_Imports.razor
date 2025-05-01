@@ -1,0 +1,28 @@
+﻿@using System.Net.Http
+@using System.Net.Http.Json
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using static Microsoft.AspNetCore.Components.Web.RenderMode
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@using Microsoft.JSInterop
+@using MyShop
+@using MyShop.Client
+@using MyShop.Client.Services.ProductAdminServices
+@using MyShop.Components
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using MyShop.Client.Pages.Account
+@using MyShop.Client.Pages.OrderAndCheckoutPage
+@using MyShop.Client.Pages
+
+
+@inject IWebHostEnvironment webHostEnv
+@inject NavigationManager NavigationManager
+@inject IAdminService AdminService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+
+@using MyShop.Client.Pages.SharedPages
+@using MyShop.Client.Services.AuthenticationService
+@using MyShopClassLibrary.Models

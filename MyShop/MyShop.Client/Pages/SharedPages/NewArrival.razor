@@ -1,0 +1,191 @@
+﻿@rendermode InteractiveAuto
+
+
+<style>
+
+    .head {
+    
+    }
+
+    p {
+    max-width: 350px;
+    }
+
+    .plus-btns {
+    position: relative;
+    bottom: 10px;
+    width: 50px;
+    height: 25px;
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 2;
+    background-color: white;
+    }
+
+    .plus-btns i {
+    margin-top: 5px;
+    font-size: 12px;
+    }
+    /*The Features*/
+    #features {
+    padding: 10px 0px;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(180px, 1fr));
+    gap: 70px;
+    margin: 0 auto;
+    }
+
+    #features .fe-box {
+    width: 230px;
+    padding: 10px;
+    text-align: center;
+    box-shadow: 20px 20px 34px rgba(0, 0, 0, 0.05);
+    border: 1px solid #cce7d0;
+    transition: box-shadow 0.2s ease, transform 0.3s ease;
+    }
+
+    #features .fe-box:hover {
+    box-shadow: 0px 12px 24px rgba(70, 62, 221, 0.1);
+    transform: scale(0.9);
+    color: #aeabd9;
+    }
+
+    .product-image {
+    height: 200px;
+    position: center;
+    overflow: hidden;
+    width: 100%;
+    border-radius: 1px;
+    background-position: center center;
+    }
+
+    .product-text {
+    text-align: center;
+    }
+
+    .product-text h6 {
+    /* padding: 4px 5px; */
+    font-size: 10px;
+    font-weight: 400;
+    /* margin-top: 60px;
+    margin-bottom: -20px; */
+    }
+
+    .product-text .btn {
+    padding: 7px 50px;
+    font-size: 10px;
+    font-weight: 800;
+    transition: none;
+    transform: none;
+    text-transform: none;
+    box-shadow: none;
+    }
+
+    .product-text .btn::after {
+    content: attr(data-after);
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: none;
+    width: none;
+    height: none;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    color: none;
+    background-color: none;
+    transition: none;
+    }
+
+</style>
+
+
+
+<div class="container">
+    <div class="head">
+        <h2>New Arrival</h2>
+    </div>
+    <p>
+        Enjoy the new products from our store. Select what you like, enjoy &
+        return.
+    </p>
+    <div class="column content">
+        @if (GetProduct is null)
+        {
+            <h5>No Product Availiable</h5>
+        }
+        else
+        {
+            <section id="features">
+
+                @foreach (var item in GetProduct)
+                {
+                    <div class="product fe-box ">
+                        <a href="posts/@item.Name"></a>
+                        <div class="product-image set-bg">
+                            <img src="@item.ImageUrl" width="220" heigth="220" @onclick="()=>ViewProductDetails(item.Name!)" style="cursor:pointer" />
+                        </div>
+
+                        <div class="product-text">
+                            <h6>@item.Name</h6>
+                            <h6>@item.Price.ToString($"₦#,##")</h6>
+                            <div class="plus-btns" @onclick="(() =>AddToCart(item))">
+                                <i class="fi fi-br-plus"></i>
+                            </div>
+                        </div>
+
+                    </div>
+                }
+
+            </section>
+        }
+    </div>
+
+</div>
+
+
+
+@code{
+    public List<Product> GetProduct { get; set; } = new();
+    public List<Product> newArrival  = new();
+
+    private const int MaxProductToShow = 5;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetAllProduct();
+        ClientService.ProductAction += StateHasChanged;
+    }
+
+    async Task GetAllProduct()
+    {
+        var product = await ClientService.GetAllProductAsync();
+        GetProduct = product.Where(p => p.CreatedDate.AddDays(10) > DateTime.Now).Take(5).ToList();
+
+        if(GetProduct.Count < MaxProductToShow) {
+            GetProduct = [.. GetProduct, .. product.Where(c => c.Featured)
+                .Take(MaxProductToShow - GetProduct.Count)];
+        }
+
+    }
+
+    async Task GetNewArrivalAsync()
+    {
+        await GetAllProduct();
+        newArrival = GetProduct.Where(p => p.CreatedDate.AddDays(10) > DateTime.Now).ToList();
+        ClientService.ProductAction!.Invoke();
+    }
+
+    private async Task AddToCart(Product model)
+    {
+        await ClientService.AddToCartAsync(model.Id);
+    }
+
+    void ViewProductDetails(string name)
+    {
+        NavigationManager.NavigateTo($"/posts/{name}");
+    }
+}

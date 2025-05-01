@@ -1,0 +1,222 @@
+﻿@page "/add-product/new"
+@page "/edit-product/{Id}"
+
+@rendermode InteractiveServer
+
+
+<EditForm Model="model" Enhance method="post" OnValidSubmit="HandleSaveProduct" FormName="Product">
+    <DataAnnotationsValidator />
+    <div class="row justify-content-center align-items-center">
+        <div class="col-sm-6">              
+            <div class="form-body mb-3">
+                <label class="form-label">Name</label>
+                <InputText @bind-Value="model.Name" class="form-control" placeholder="Enter Name"/>
+                <ValidationMessage For="() => model.Name" class="text-danger"/>
+            </div>
+            <div class="form-body">
+                <label class="form-label">Select Category</label>
+                @if (Categories is not null)
+                {
+                    <InputSelect class="form-select form-control-sm" @bind-Value="@model.CategoryId">
+                        <option selected>Select Category</option>
+                        @foreach (var category in Categories)
+                        {
+                            <option value="@category.Id">@category.Name</option>
+                        }
+                    </InputSelect>
+                <ValidationMessage For="() => model.CategoryId" class="text-danger" />
+
+                }
+            </div>
+            <div class="form-group mt-3">
+                <label class="form-label"> Quantity</label>
+                <InputNumber @bind-Value="model.Quantity" class="form-control"></InputNumber>
+                <ValidationMessage For="() => model.Quantity" class="text-danger" />
+
+            </div>
+            <div class="form-group mt-3">
+                <label class="form-label"> OriginalPrice</label>
+                <InputNumber @bind-Value="model.OriginalPrice" class="form-control"></InputNumber>
+                <ValidationMessage For="() => model.OriginalPrice" class="text-danger" />
+
+            </div>
+            <div class="form-group mt-3">
+                <label class="form-label"> Price</label>
+                <InputNumber @bind-Value="model.Price" class="form-control"></InputNumber>
+                <ValidationMessage For="() => model.Price" class="text-danger" />
+
+            </div>
+            <div class="form-group mb-3">
+                <label class="form-label"> Description</label>
+                <InputTextArea @bind-Value="model.Description" class="form-control"></InputTextArea>
+                <ValidationMessage For="() => model.Description" class="text-danger" />
+
+            </div>
+            @if (!string.IsNullOrWhiteSpace(imageUrl))
+            {
+                <div class="mb-3">
+                    <img src="@imageUrl" style="height: 200px" />
+                </div>
+            }
+            <div class="mb-3">
+                <label class="form-label d-block">Upload Image</label>
+                <InputFile OnChange="LoadFilesAsync"  />
+            </div>
+            <div class="mb-3">
+                <label class="form-label ml-3">
+                    <InputCheckbox @bind-Value="model.IsActive" class="form-check-input" />
+                    Active?
+                </label>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <div class="mb-3">
+                    <p class="text-danger">@errorMessage</p>
+                </div>
+            }
+            <div class="mb-3">
+                <button type="submit" class="btn btn-success" @onclick="HandleSaveProduct">Save </button>
+             </div>
+        </div>
+    </div>
+</EditForm>
+
+
+@code {
+    [Parameter]
+    public string? Id { get; set; }
+    private const string ProductBaseUrl = "api/product";
+    private const string CatgeoryBaseUrl = "api/category";
+
+    private Product model = new();
+
+    private List<Category> Categories = [];
+    private string? imageUrl;
+    private string? imageUrlToDelete;
+    public string? errorMessage;
+    List<string> errors = new();
+    //private int maxAllowedFiles = 3;
+    private long maxFileSize = 1024 * 1024 * 5;
+    private IBrowserFile? UploadedFile;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var category = await AdminService.GetCategoriesAsync();
+        Categories = category!;
+        if (Id == null)
+        {
+            var product = await AdminService.GetProductByIdAsync(Id!);
+            if (product is null)
+            {
+                NavigationManager.NavigateTo("admin/manage/products", replace: true);
+                return;
+            }
+            //Load the Product and the image
+            model = product;
+            imageUrl = product.ImageUrl;
+        }
+    }
+
+    public async Task HandleSaveProduct()
+    {
+        try
+        {
+            if (UploadedFile is not null)
+            {
+                var uploadedFileUrl = await CaptureFile(UploadedFile);
+                if (uploadedFileUrl is null)
+                    return;
+                if (model.Id > 0 && !string.IsNullOrWhiteSpace(model.ImageUrl))
+                {
+                    //Edit mode
+                    imageUrlToDelete = model.ImageUrl;
+
+                }
+
+                model.ImageUrl = uploadedFileUrl;
+            }
+            if(model.Id == 0)
+            {
+                await AdminService.AddProductAsync(model);
+            }
+            else
+            {
+                await AdminService.UpdateProduct(model);
+            }
+            UploadedFile = null;
+
+            if (imageUrlToDelete != null)
+            {
+                //We change the image for this existing blog post
+                //Lets remove the existing image from physical location
+                DeleteExistingImage(imageUrlToDelete);
+            }
+            NavigationManager.NavigateTo("admin/manage/products");
+            return;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+
+    //upload image methods
+
+    private async Task PreviewImageAsync(IBrowserFile file)
+    {
+        // .png ->
+        var extension = Path.GetExtension(file.Name)[1..]; //.png -> png
+        using var stream = file.OpenReadStream(maxFileSize);
+        using MemoryStream memoryStream = new();
+        await stream.CopyToAsync(memoryStream);
+
+
+        //data:image/type;base64,jfjfjfjfjfjfjfjkldd
+        imageUrl = $"data:image/{extension};base64,{Convert.ToBase64String(memoryStream.ToArray())}";
+    }
+
+
+    public async void LoadFilesAsync(InputFileChangeEventArgs e)
+    {
+        errors.Clear();
+        await PreviewImageAsync(e.File);
+        UploadedFile = e.File;
+    }
+
+    private void DeleteExistingImage(string imageUrl)
+    {
+        var imagePath = imageUrl.Replace("/", "\\");
+        var fullPath = Path.Combine(webHostEnv.WebRootPath, imagePath);
+        try
+        {
+            File.Delete(fullPath);
+        }
+        catch { }
+    }
+
+
+    public async Task<string> CaptureFile(IBrowserFile browserFile)
+    {
+        var randomFileName = Path.GetRandomFileName();
+        var extension = Path.GetExtension(browserFile.Name);
+        //it will give us this : ...../wwroot/images/posts
+        var folder = Path.Combine(webHostEnv.WebRootPath, "images", "posts");
+        Directory.CreateDirectory(folder);
+        var fileNamePath = Path.Combine("images", "posts", randomFileName + extension);
+        var fullPath = Path.Combine(webHostEnv.WebRootPath, fileNamePath);
+        await using FileStream fileStream = new FileStream(fullPath, FileMode.Create);
+        try
+        {
+            await browserFile.OpenReadStream(maxFileSize).CopyToAsync(fileStream);
+            return fileNamePath.Replace("\\", "/");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+            fileStream.Close();
+            //throw
+            return null!;
+        }
+    }
+}

@@ -1,0 +1,228 @@
+﻿@page "/product"
+
+
+@rendermode InteractiveAuto
+
+
+<PageTitle>Product Grid Layout</PageTitle>
+
+<style>
+    .column {
+        float: left;
+        padding: 15px;
+    }
+
+    .clearfix::after {
+        content: "";
+        clear: both;
+        display: table;
+    }
+
+    .menu {
+        width: 15%;
+        margin-top: 10px;
+        border: 1px outset #808080;
+        border-radius: 7px;
+        color: black;
+    }
+
+    .content {
+        width: 75%;
+    }
+
+    .menu ul {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .menu li {
+        padding: 8px;
+        margin-bottom: 8px;
+        color: black;
+        background-color: white;
+    }
+
+        .menu li:hover {
+            background-color: blueviolet;
+            color: black;
+        }
+    /*The Features*/
+    #features {
+        padding: 40px 80px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(180px, 1fr));
+        gap: 5px;
+        margin: 0 auto;
+    }
+
+        #features .fe-box {
+            width: 230px;
+            padding: 10px;
+            text-align: center;
+            box-shadow: 20px 20px 34px rgba(0, 0, 0, 0.05);
+            border: 1px solid #cce7d0;
+            transition: box-shadow 0.2s ease, transform 0.3s ease;
+        }
+
+            #features .fe-box:hover {
+                box-shadow: 0px 12px 24px rgba(70, 62, 221, 0.1);
+                transform: scale(0.9);
+                color: #aeabd9;
+            }
+
+    .product-image {
+        height: 200px;
+        position: center;
+        overflow: hidden;
+        width: 100%;
+        border-radius: 1px;
+        background-position: center center;
+    }
+
+    .product-text {
+        text-align: center;
+    }
+
+        .product-text h6 {
+            /* padding: 4px 5px; */
+            font-size: 10px;
+            font-weight: 400;
+            /* margin-top: 60px;
+                    margin-bottom: -20px; */
+        }
+
+        .product-text .btn {
+            padding: 7px 50px;
+            font-size: 10px;
+            font-weight: 800;
+            transition: none;
+            transform: none;
+            text-transform: none;
+            box-shadow: none;
+        }
+
+            .product-text .btn::after {
+                content: attr(data-after);
+                position: absolute;
+                top: 100%;
+                left: 50%;
+                transform: none;
+                width: none;
+                height: none;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                color: none;
+                background-color: none;
+                transition: none;
+            }
+
+</style>
+
+<div style="min-height:500px">
+    <div class="column menu">
+        @if (Category is null)
+        {
+            <LoadingPage LoaderText="Loading" />
+        }
+        else
+        {
+            <div style="text-align:center;">
+                <h5>Categories</h5>
+            </div>
+            <ul>
+                @foreach (var category in Category)
+                {
+                    <li style="cursor:pointer;" @onclick="()=>LoadProductsByCategory(category)">@category.Name </li>
+                }
+            </ul>
+
+        }
+    </div>
+    <div class="column content">
+        @if (ProductList is null)
+        {
+            <h5>No Product Availiable</h5>
+        }
+        else
+        {
+            <div class="container">
+                <div style="padding:5px 0px 0px 0px;border-bottom:1px ridge black; margin-bottom:5px;">
+                    <hs><i><u>@catgeoryName</u></i></hs>
+                </div>
+                <section id="features">
+
+                    @foreach (var product in ProductList)
+                    {
+                        <div class="product fe-box ">
+                            <a href="posts/@product.Name"></a>
+                            <div class="product-image set-bg">
+                                <img src="@product.ImageUrl" width="220" heigth="220" @onclick="()=>ViewProductDetails(product.Name!)" style="cursor:pointer" />
+                            </div>
+                            <div class="product-text">
+                                <h6>@product.Name</h6>
+                                <h6>@product.Price.ToString($"₦#,##")</h6>
+                                <button class="btn " @onclick="() => AddToCart(product)">ADD T0 CART</button>
+                            </div>
+
+                        </div>
+                    }
+
+                </section>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    
+    private List<Product> ProductList { get; set; } = new();
+    public List<Product>? ProductsByCatgeory { get; set; }
+    
+    public Category[] Category = [];
+
+    [Parameter]
+    public string? catgeoryName { get; set; }
+
+    protected async override Task OnInitializedAsync()
+    {
+        var category = await ClientService.GetCategoryAsync();
+        Category = category;
+
+        
+        await LoadData();
+       
+
+        if (Category != null && Category.Count() > 0)
+        {
+            await LoadProductsByCategory(Category.FirstOrDefault()!);
+        }
+    }
+
+    async Task LoadData()
+    {
+        var products = await ClientService.GetAllProductAsync();
+        ProductList = products;
+    }
+
+    async Task LoadProductsByCategory(Category model)
+    {
+        catgeoryName = model.Name;
+        ProductList = await ClientService.GetProductByCategory(model.Id);
+    }
+
+
+
+    private async Task AddToCart(Product model)
+    {
+        await ClientService.AddToCartAsync(model.Id);
+    }
+
+    void ViewProductDetails(string name)
+    {
+        NavigationManager.NavigateTo($"/posts/{name}");
+    }
+
+    
+}

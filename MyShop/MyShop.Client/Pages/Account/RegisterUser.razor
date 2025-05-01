@@ -1,0 +1,71 @@
+﻿@page "/account/register"
+
+@rendermode InteractiveServer
+
+
+<PageTitle>Register</PageTitle>
+
+<style>
+    .input-box {
+    border-radius: 4px;
+    background: #ffffff;
+    border: #ccc 2px solid;
+    padding: 5px;
+    width: 250px;
+    color: #525252;
+    margin-top: 10px;
+    font-size: 1em;
+    }
+</style>
+
+<div style="min-height: 400px;">
+    <div class="loginBox ">
+        <div class="box">
+            <h1>Register</h1>
+            <EditForm Enhance Model="Model" method="post" OnValidSubmit="RegisteNewrUser" FormName="register">
+                <DataAnnotationsValidator />
+
+                <InputText @bind-Value="Model.FirstName" class="input-box" autoComplete="username" aria-required="true" placeholder="FirstName"></InputText>
+                <ValidationMessage For="() => Model.FirstName" class="text-danger" />
+
+                <InputText @bind-Value="Model.LastName" class="input-box" autoComplete="username" aria-required="true" placeholder="LastName"></InputText>
+                <ValidationMessage For="() => Model.LastName" class="text-danger" />
+
+                <InputText @bind-Value="Model.Email" class="input-box" type="email" placeholder="John@name.com" />
+                <ValidationMessage For="() => Model.Email" class="text-danger" />
+
+                <InputText type="password" class="input-box" @bind-Value="Model.Password" placeholder="password" />
+                <ValidationMessage For="() => Model.Password" class="text-danger" />
+
+                <InputText @bind-Value="Model.ConfirmPassword" type="password" class="input-box" aria-required="true" placeholder="confirmpassword"></InputText>
+                <ValidationMessage For="() => Model.ConfirmPassword" class="text-danger" />
+                <input type="submit" class="btn-register" value="Regiser" />
+                <a href="/account/login"><div id="btn-login">Login</div></a>
+            </EditForm>
+        </div>
+    </div>
+
+</div>
+
+
+@code {
+
+    [SupplyParameterFromForm]
+    private RegisterDTO Model { get; set; } = new();
+
+
+    public async Task RegisteNewrUser()
+    {
+        var register = await ClientService.RegisterUserAsync(Model);
+        if (register.Flag)
+        {
+            Model = new();
+        }
+        else
+        {
+            return;
+        }
+        NavigationManager.NavigateTo("/account/login");
+
+    }
+}

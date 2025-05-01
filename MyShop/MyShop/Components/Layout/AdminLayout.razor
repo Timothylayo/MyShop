@@ -1,0 +1,72 @@
+﻿@inherits LayoutComponentBase
+
+<style>
+    .logo {
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 32px;
+        font-weight: 900;
+    }
+</style>
+
+<div class="navbar">
+    <div class="container">
+        <nav>
+            <div class="logo">
+                <a href="/">
+                    <strong>BlinkyBill</strong>
+                </a>
+            </div>
+            <ul class="nav-links">
+                <li>
+
+                    <a href="/" data-enhance-nav @onclick="() => NavigationManager.Refresh(true)">Home</a>
+                </li>
+                <li>
+                    <a href="admin/dashboard">Admin Panel</a>
+                </li>
+                <li>
+
+                    <a href="admin/manage/products">Manage Product</a>
+                </li>
+                <li>
+                    <a href="admin/manage/categories" >Manage Categories</a>
+                </li>
+                <li>
+                    <a href="admin/manage/orders" >Orders</a>
+                </li>
+                <li>
+                    <a href="admin/stock">Stock</a>
+                </li>
+                
+                <li>
+                    <AuthorizeView>
+                        <Authorized>
+                            <LogoutComponent />
+                        </Authorized>
+                    </AuthorizeView>
+                </li>
+            </ul>
+            <div class="icons">
+                
+                <!-- hambtn -->
+                <i class="fi fi-rr-menu-burger hamburger open"></i>
+                <i class="fi fi-rr-cross hamburger close"></i>
+            </div>
+        </nav>
+    </div>
+</div>
+
+<div class="container">
+    <main>
+        <article>
+            @Body
+        </article>
+    </main>
+
+</div>
+
+
+
+@code {
+
+}

@@ -1,0 +1,292 @@
+﻿@page "/account/myAccount"
+@rendermode InteractiveAuto
+
+
+<style>
+
+    .column {
+    float: left;
+    padding: 4px;
+    }
+
+    .clearfix::after {
+    content: "";
+    clear: both;
+    display: table;
+    }
+
+    .menu {
+    width: 25%;
+    margin-top: 5px;
+    color: black;
+    }
+
+    .content {
+    width: 75%;
+    }
+
+    a {
+    cursor: pointer;
+    }
+
+    .vertical-menu {
+    width: 200px;
+    border: 2px ridge #8a2be2;
+    display: contents;
+    }
+
+    .vertical-menu a {
+    background-color: #eee;
+    color: black;
+    display: block;
+    padding: 12px;
+    text-decoration: none;
+    }
+
+    .vertical-menu a:hover {
+    background-color: blueviolet;
+    }
+
+    .vertical-menu a.active {
+    background-color: #8a2be2;
+    color: white;
+    }
+
+    .card {
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0, 0.2);
+    max-width: 500px;
+    margin: auto;
+    text-align: center;
+    font-family: Arial;
+    }
+
+    .title {
+    color: grey;
+    font-size: 18px;
+    }
+
+
+
+</style>
+
+<style>
+    .modal {
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: rgb(0,0,0);
+    background-color: rgb(0,0,0,0.4);
+    display: grid;
+    }
+
+    .modal-content {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 50%;
+    overflow: hidden;
+    }
+
+    .close {
+    color: #aaaaaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+    }
+</style>
+
+<div style="min-height: 400px;">
+
+    <div class="column menu" style="background-color: white; border-radius: 15px;">
+
+        <div class="vertical-menu">
+            <a class="@(myAccountFlag? "active" : "")" @onclick='(() => ChangeActiveMenu("MyAccount"))'>My Account</a>
+            <a class="@(changePasswordFlag? "active" : "")" @onclick='(() => ChangeActiveMenu("ChangePassword"))'>Change Password</a>
+        </div>
+    </div>
+    <div class="column content">
+
+        <div style="border:2px ridge  #8a2be2; padding: 10px; border-radius:15px;">
+            <div style="border-bottom:2px ridge #8a2be2;"> <h4>@headerText</h4></div>
+
+            @if (myAccountFlag)
+            {
+                <div style="width:200px;">
+                    <img src="assets/images/picture.jpeg" alt="Profile" style="width:100%" />
+                    <div class="card">
+                        <EditForm Model="User" FormName="profile" OnValidSubmit="OnValidSubmitAsync" method="post">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary class="text-danger" role="alert" />
+                            <div class="form-floating mb-3">
+                                <InputText @bind-Value="User.UserName" class="form-control" placeholder="Please enter your UserName." />
+                                <label for="user-name" class="form-label">UserName</label>
+                                <ValidationMessage For="() => User.UserName" class="text-danger" />
+                            </div>
+                            <div class="form-floating mb-3">
+                                <input type="text" value="@userEmail" class="form-control" placeholder="Please choose your username." disabled />
+                                <label for="username" class="form-label">Email</label>
+                            </div>
+                            <div class="form-floating mb-3">
+                                <InputText @bind-Value="User.PhoneNumber"  class="form-control" placeholder="Please enter your phone number." />
+                                <label for="phone-number" class="form-label">Phone number</label>
+                                <ValidationMessage For="() => User.PhoneNumber" class="text-danger" />
+                            </div>
+                            <div class="form-floating mb-3">
+                                <InputText @bind-Value="User.Address" class="form-control" placeholder="Please enter your phone number." />
+                                <label for="phone-number" class="form-label">Address</label>
+                                <ValidationMessage For="() => User.Address" class="text-danger" />
+                            </div>
+                            <button type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
+                        </EditForm>
+                    </div>
+                </div>
+            }
+
+            @if (changePasswordFlag)
+            {
+                <div style="width:400px">
+                    <div class="form-group">
+                        <EditForm Model="@passwordModel" OnInvalidSubmit="ChangePassword">
+                            <DataAnnotationsValidator />
+                            <div class="form-group">
+                                <label>Old Password:</label>
+                                <InputText type="text" class="form-control" id="oldpd" @bind-Value="@passwordModel.OldPassword" autocomplete="off"/>
+                                <ValidationMessage For="@(() => passwordModel.OldPassword)" />
+                            </div>
+                            <div class="form-group">
+                                <label>New Password:</label>
+                                <InputText type="text" class="form-control" id="newpd" @bind-Value="@passwordModel.NewPassword" autocomplete="off" />
+                                <ValidationMessage For="@(() => passwordModel.NewPassword)" />
+                            </div>
+                            <div class="form-group">
+                                <label>Confirm Password:</label>
+                                <InputText type="text" class="form-control" id="confirmpd" @bind-Value="@passwordModel.ConfirmPassword" autocomplete="off" />
+                                <ValidationMessage For="@(() => passwordModel.ConfirmPassword)" />
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn-checkout" @onclick="(() =>  ChangePassword())">Submit</button>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+</div>
+
+@if (showAlertMessage == true)
+{
+    <div class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5>Alert</h5>
+                <span class="close" @onclick="ToggleAlertMessage" >&times;;</span>
+            </div>
+            <div class="modal-body">
+                @alertMessage
+            </div>
+            <div class="modal-footer">
+                <input type="button" class="btn-checkout btn-primary" value="Close" @onclick="ToggleAlertMessage" />
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+    [SupplyParameterFromForm]
+    public UserDTO User { get; set; } = new();
+    private PasswordModel passwordModel { get; set; } = new();
+    PaginationState pagination = new PaginationState { ItemsPerPage = 5 };
+
+    private string? userKey;
+    private string headerText = "MyAccount";
+    private string userEmail = string.Empty;
+    private string alertMessage = string.Empty;
+    private bool myAccountFlag = true;
+    private bool changePasswordFlag = false;
+    private bool showAlertMessage = false;
+    private ServiceResponse? response;
+    
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        passwordModel = new PasswordModel();
+        CustomClaims claims =  DecryptJwtToken.GetClaims(JWTModel.JWTToken);
+        userKey = claims.id;
+        userEmail = claims.Email;
+        var user = await ClientService.GetUserDetails(userKey);
+        User.Id = userKey;
+        User.PhoneNumber ??= user.PhoneNumber;
+        User.Address ??= user.Address;
+        User.UserName ??= user.UserName;
+    }
+
+    private void ChangeActiveMenu(string menu)
+    {
+        headerText = menu;
+        switch (menu)
+        {
+            case "MyAccount":
+                myAccountFlag = true;
+                changePasswordFlag = false;
+                break;
+            case "ChangePassword":
+                myAccountFlag = false;
+                changePasswordFlag = true;
+                break;
+        }
+    } 
+
+    private async Task ChangePassword()
+    {
+        if(passwordModel.NewPassword != passwordModel.ConfirmPassword)
+        {
+            alertMessage = "NewPassword & ConfirmPassword are not the same";
+            ToggleAlertMessage();
+        }
+        else
+        {
+            passwordModel.UserKey = userKey!;
+            response = await ClientService.ChangePassword(passwordModel);
+            if (response.Flag)
+            {
+                passwordModel = new PasswordModel();
+                alertMessage = response.Message;
+                ToggleAlertMessage();
+            }
+        }
+    }
+
+    private async Task OnValidSubmitAsync()
+    {
+        await ClientService.UpdateUserDetails(User);
+    }
+
+    async Task GetUserDetails()
+    {
+        var claim = DecryptJwtToken.GetClaims(JWTModel.JWTToken);
+        var user = await ClientService.GetUserDetails(claim.id);
+        user = User;
+    } 
+
+    private void ToggleAlertMessage()
+    {
+        showAlertMessage = showAlertMessage == true ? false : true;
+    }
+    
+}

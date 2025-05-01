@@ -1,0 +1,64 @@
+﻿
+@rendermode @(new InteractiveServerRenderMode(prerender:false))
+
+<div class="d-grid">
+    <button class="btn-logout" type="button" @onclick="(async () =>  Logout())">Logout</button>
+</div>
+
+
+<style>
+    nav .nav-links li a:hover,
+    nav .nav-links li a.active {
+        color: var(--color-magenta);
+    }
+
+    nav .nav-links li a::after {
+        content: "";
+        position: absolute;
+        bottom: -50px;
+        left: 50%;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        transform: translateX(-50%);
+        opacity: 0;
+        transition: bottom 0.3s 0.3s, width 0.3s, border-radius 0s 0.3s, height 0.3s 0.3s, opacity 0.3s 0.1s;
+        background-color: var(--color-magenta);
+    }
+
+    nav .nav-links li a:not(.active):hover::after {
+        bottom: -15px;
+        width: 100%;
+        border-radius: 5px;
+        height: 2px;
+        opacity: 1;
+        transition: bottom 0.3s, width 0.3s 0.3s, border-radius 0s 0.3s, height 0.3s 0.3s, opacity 0.3s;
+    }
+
+    nav .nav-links li a.active::after {
+        bottom: -15px;
+        opacity: 1;
+    }
+    .btn-logout {
+        background: none;
+        border: none;
+        padding: 0px;
+        color: red;
+        font-size: 17px;
+    }
+        .btn-logout:hover {
+            text-decoration: underline;
+        }
+</style>
+
+
+
+@code {
+    private void Logout()
+    {
+        var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
+        customAuthStateProvider.UpdateAuthenticationState(null!);
+        NavigationManager.NavigateTo("/", forceLoad: true);
+        
+    }
+}
