@@ -18,6 +18,8 @@ namespace MyShop.Repository
         List<StockModel> GetProductStock();
         Task<ServiceResponse> UpdateProduct(Product model);
         bool UpdateStock(StockModel model);
+        Task<OrderDTO> GetShippingStatus(string orderId);
+        Task<ServiceResponse> UpdateShippingStatus(ShippingStatusModel shippingStatus);
         List<OrderDTO> GetOrders();
         LoginResponse RefreshToken(UserSession session);
     }

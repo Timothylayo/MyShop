@@ -15,7 +15,6 @@ namespace MyShop.Repository
     public class AdminRepository(ApplicationDbContext applicationDb, IConfiguration configuration) : IAdminRepository
     {
         private readonly ApplicationDbContext _dbContext = applicationDb;
-        private readonly IConfiguration _configuration = configuration;
 
 
         //Products
@@ -238,7 +237,31 @@ namespace MyShop.Repository
             }
             return orders;
         }
+        public Task<OrderDTO> GetShippingStatus(string orderId)
+        {
+            var order = _dbContext.Orders.Where(x => x.OrderId == orderId)
+                                         .FirstOrDefault();
+            OrderDTO orderDTO = new()
+            {
+                OrderId = orderId,
+                ShippingStatus = order!.ShippingStatus
+            };
+            return Task.FromResult(orderDTO);
+        }
 
+        public Task<ServiceResponse> UpdateShippingStatus(ShippingStatusModel shippingStatus)
+        {
+            var orderToBeUpdated = _dbContext.Orders.Where(x => x.OrderId == shippingStatus.OrderId)
+                                                   .FirstOrDefault();
+            if (orderToBeUpdated != null)
+            {
+                orderToBeUpdated.OrderId = shippingStatus.OrderId;
+                orderToBeUpdated.ShippingStatus = shippingStatus.ShippingStatus;
+                //_dbContext.Orders.Update(orderToBeUpdated);
+                _dbContext.SaveChanges();
+            }
+            return Task.FromResult(new ServiceResponse(true, "Shipping Status Updated"));
+        }
         //Private Methods
         private string GenerateUniqueProductId()
         {
@@ -247,7 +270,7 @@ namespace MyShop.Repository
             for (int i = 0; i < 1000; i++)
             {
                 random = new Random();
-                productId = "P" + random.Next(1, 10000000).ToString("D4");
+                productId = "P" + random.Next(1, 10000).ToString("D4");
                 if (!_dbContext.Products.Where(x => x.ProdNum == productId).Any())
                 {
                     break;

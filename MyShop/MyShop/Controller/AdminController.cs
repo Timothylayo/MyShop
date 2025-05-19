@@ -9,7 +9,7 @@ namespace MyShop.Controller;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize]
+[Authorize(Roles = "Admin")]
 public class AdminController(IAdminRepository adminRepository) : ControllerBase
 {
     private readonly IAdminRepository _adminRepository = adminRepository;
@@ -52,6 +52,7 @@ public class AdminController(IAdminRepository adminRepository) : ControllerBase
         return Ok(await _adminRepository.GetAllProductAsync());
     }
 
+    [AllowAnonymous]
     [HttpGet("getproductbyid/{Id}")]
     public async Task<ActionResult> GetProductById(string Id)
     {
@@ -90,15 +91,31 @@ public class AdminController(IAdminRepository adminRepository) : ControllerBase
     }
 
     //Other Services
+    [AllowAnonymous]
     [HttpGet("getorderdetails/{orderNumber}")]
     public ActionResult GetOrderDetails(string orderNumber)
     {
         return Ok(_adminRepository.GetOrderDetails(orderNumber));
     }
 
+    [AllowAnonymous]
     [HttpGet("getorders")]
-    public ActionResult GetOrdersByCustomerId()
+    public ActionResult GetOrders()
     {
         return Ok(_adminRepository.GetOrders());
+    }
+
+    [AllowAnonymous]
+    [HttpGet("getshippingStatus/{orderId}")]
+    public async Task<ActionResult> GetShippingStatus(string orderId)
+    {
+        return Ok(await _adminRepository.GetShippingStatus(orderId));
+    }
+
+    [AllowAnonymous]
+    [HttpPut("updateorderstatus")]
+    public async Task<ActionResult<ServiceResponse>> UpdateShippingStatus(ShippingStatusModel shippingStatus)
+    {
+        return Ok(await _adminRepository.UpdateShippingStatus(shippingStatus));
     }
 }

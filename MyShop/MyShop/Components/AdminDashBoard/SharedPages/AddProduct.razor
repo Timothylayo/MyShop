@@ -103,7 +103,7 @@
     {
         var category = await AdminService.GetCategoriesAsync();
         Categories = category!;
-        if (Id == null)
+        if (Id != null)
         {
             var product = await AdminService.GetProductByIdAsync(Id!);
             if (product is null)

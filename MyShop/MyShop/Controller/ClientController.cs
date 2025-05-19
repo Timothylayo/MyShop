@@ -95,16 +95,9 @@ namespace MyShop.Controller
         }
 
         [HttpGet("GetShippingStatusForOrder/{order_number}")]
-        public ActionResult GetShippingStatusForOrder(int customerId, string order_number)
+        public ActionResult GetShippingStatusForOrder(string order_number)
         {
             var data = _clientRepository.GetShippingStatusForOrder(order_number);
-            return Ok(data);
-        }
-
-        [HttpGet("GetShippingStatus/{order_number}")]
-        public ActionResult GetShippingStatus(string order_number)
-        {
-            var data = _clientRepository.GetShippingStatus(order_number);
             return Ok(data);
         }
 

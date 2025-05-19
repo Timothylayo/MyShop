@@ -36,6 +36,8 @@ builder.Services.AddAuthentication(o =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
     };
 });
+builder.Services.AddSwaggerGen();
+builder.Services.AddOpenApi("v1");
 builder.Services.AddAuthentication();
 builder.Services.AddControllers();
 builder.Services.AddRazorPages();
@@ -60,8 +62,18 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.MapOpenApi();
+    app.MapScalarApiReference(o =>
+    {
+        o.Title = "MyShop API Reference";
+        o.Theme = ScalarTheme.BluePlanet;
+        o.DefaultHttpClient = new(ScalarTarget.CSharp, ScalarClient.HttpClient);
+        o.ShowSidebar = true;
+    });
+    app.UseSwagger();
+    app.UseSwaggerUI();
     app.UseWebAssemblyDebugging();
-    app.MapScalarApiReference();
+
 }
 else
 {

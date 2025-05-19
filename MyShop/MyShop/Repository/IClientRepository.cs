@@ -32,7 +32,6 @@ namespace MyShop.Repository
         List<CartItemDto> GetOrderDetails(string order_number);
         List<OrderDTO> GetOrders();
         List<OrderDTO> GetOrdersByCustomerId(string customerId);
-        OrderDTO GetShippingStatus(string order_number);
         List<string> GetShippingStatusForOrder(string order_number);
         Task<ServiceResponse> UpdateShippingStatus(OrderDTO orderDTO);
         Task<ServiceResponse> Checkout(List<CartItemDto> cartItems);

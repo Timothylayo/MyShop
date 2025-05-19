@@ -3,43 +3,6 @@
 
 <PageTitle>Manage Orders</PageTitle>
 
-<style>
-    .modal {
-        position: fixed;
-        z-index: 10;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        background-color: rgb(0,0,0);
-        background-color: rgb(0,0,0,0.4);
-        display: grid;
-    }
-
-    .modal-content {
-        background-color: #fefefe;
-        margin: auto;
-        padding: 20px;
-        border: 1px solid #888;
-        width: 50%;
-        overflow: hidden;
-    }
-
-    .close {
-        color: #aaaaaa;
-        float: right;
-        font-size: 28px;
-        font-weight: bold;
-    }
-
-        .close:hover,
-        .close:focus {
-            color: #000;
-            text-decoration: none;
-            cursor: pointer;
-        }
-</style>
 
 <div class="container">
     <div class="card">
@@ -59,7 +22,7 @@
                         <PropertyColumn Property="@(c => c.TotalPrice.ToString("₦#,##"))" Title="Total" Align="Align.Center" />
                         <PropertyColumn Property="@(c => c.CreatedDate)" Title="Order Date" Align="Align.Center" />
                         <TemplateColumn Align="Align.Center" Title="Track">
-                            <input type="button" class="btn btn-Primary" value="Track" @onclick="(() => UpdateShippingStatus(context))" />
+                            <input type="button" class="btn btn-Primary" value="Track" @onclick="(() => GetShippingStatus(context))" />
                         </TemplateColumn>
                         <TemplateColumn Align="Align.Center" Title="Details">
                             <input type="button" class="btn btn-primary" value="Detail" @onclick="(() => GetOrderDetails(context.OrderId!))" />
@@ -68,9 +31,9 @@
                 }
             }
         </div>
-        <div class="card-footer">
+        @* <div class="card-footer">
             <Paginator State="pagination" />
-        </div>
+        </div> *@
     </div>
 </div>
 
@@ -85,18 +48,21 @@
                 <span class="close" @onclick="ToggleTrackOrderPopup">&times;</span>
             </div>
             <div class="modal-body">
-                <EditForm Model="model" OnValidSubmit="UpdateOrderStatus">
+                <EditForm Model="model" >
                     <DataAnnotationsValidator/>             
                     <div class="form-body mb-3">
+                        <label for="username" class="form-label">OrderId</label>
+                        <input type="text" value="@model.OrderId" class="form-control" disabled />
+                    </div>
+                    <div class="form-body mb-3">
                         <label class="form-label">Name</label>
-                        <InputText @bind-Value="model!.ShippingStatus" class="form-control" placeholder="Enter Name" />
+                        <InputText @bind-Value="model!.ShippingStatus" class="form-control"/>
                         <ValidationMessage For="() => model.ShippingStatus" class="text-danger" />
-
                     </div>
                 </EditForm>
             </div>
             <div class="modal-footer">
-                <input type="button" class="btn btn-primary" value="UpdateStock" @onclick="UpdateOrderStatus" />
+                <input type="button" class="btn btn-primary" value="UpdateStatus" @onclick="UpdateShippingStatus" />
                 <input type="button" class="btn btn-primary" value="Close" @onclick="ToggleTrackOrderPopup" />
             </div>
         </div>
@@ -163,20 +129,17 @@
     public decimal subTotal { get; set; }
     public decimal finalTotal { get; set; }
     public List<string>? shippingUpdates { get; set; }
-
     private bool isLoading;
     private string? loadingText;
-
     PaginationState pagination = new PaginationState { ItemsPerPage = 5 };
-    private List<OrderDTO>? customerOrders { get; set; } 
-
-    private OrderDTO? model;
+    private List<OrderDTO>? customerOrders { get; set; }
+    [SupplyParameterFromForm]
+    private ShippingStatusModel model { get; set; } = new();
 
 
     protected override async Task OnInitializedAsync()
     {
         customerOrders = await AdminService.GetOrders();
-
     }
 
     private async Task GetOrderDetail(string order_number)
@@ -194,20 +157,17 @@
         }
     }
 
-    async Task UpdateOrderStatus()
+    async Task UpdateShippingStatus()
     {
-        // var message = await AdminService.UpdateShippingStatus(model!);
-        // ToggleTrackOrderPopup();
+        var message = await AdminService.UpdateShippingStatus(model);
+        ToggleTrackOrderPopup();
     }
 
-
-    private async void UpdateShippingStatus(OrderDTO order)
+    private async void GetShippingStatus(OrderDTO order)
     {
-        model = order;
-        // string orderNumber = order.OrderId!;
-        // var status = await accountService.GetShippingStatus(orderNumber);
-
-        // model.ShippingStatus = status!.ShippingStatus;
+        var status = await AdminService.GetShippingStatus(order.OrderId!);
+        model.ShippingStatus ??= status.ShippingStatus;
+        model.OrderId ??= status.OrderId;
         ToggleTrackOrderPopup();
     }
     private void ToggleTrackOrderPopup()

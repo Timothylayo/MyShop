@@ -9,7 +9,7 @@ namespace MyShop.Client.Services.ProductAdminServices
     public class AdminService(HttpClient httpClient, AuthenticationServices authenticationServices) : IAdminService
     {
         private readonly AuthenticationServices _authenticationService = authenticationServices;
-        private const string AdminBaseUrl = "apiAdmin";
+        private const string AdminBaseUrl = "api/Admin";
 
         //Product
         public async Task<ServiceResponse> AddProductAsync(Product product)
@@ -56,16 +56,7 @@ namespace MyShop.Client.Services.ProductAdminServices
 
         public async Task<Product?> GetProductByIdAsync(string id)
         {
-            _authenticationService.GetProtectedClient();
-            var response = await httpClient.GetAsync($"{AdminBaseUrl}/getproductbyid/{id}");
-            var result = CheckIfUnauthorized(response);
-            if (!result.Flag)
-            {
-                await _authenticationService.GetRefreshToken();
-                return await GetProductByIdAsync(id);
-            }
-
-            return await response.Content.ReadFromJsonAsync<Product>();
+            return await httpClient.GetFromJsonAsync<Product>($"{AdminBaseUrl}/getproductbyid/{id}");
         }
 
         public async Task<ServiceResponse> UpdateProduct(Product model)
@@ -152,6 +143,24 @@ namespace MyShop.Client.Services.ProductAdminServices
         {
             return await httpClient.GetFromJsonAsync<List<OrderDTO>>($"{AdminBaseUrl}/getorders");
         }
+
+        public async Task<OrderDTO> GetShippingStatus(string orderId)
+        {
+            var result = await httpClient.GetFromJsonAsync<OrderDTO>($"{AdminBaseUrl}/getshippingStatus/{orderId}");
+            return result!;
+        }
+
+        public async Task<ServiceResponse> UpdateShippingStatus(ShippingStatusModel shippingStatus)
+        {
+            var result = await httpClient.PutAsJsonAsync($"{AdminBaseUrl}/updateorderstatus", shippingStatus);
+            if (!result.IsSuccessStatusCode)
+            {
+                return null!;
+            }
+            var apiResult = await result.Content.ReadFromJsonAsync<ServiceResponse>();
+            return apiResult!;
+        }
+
 
         //Private methods
         private static ServiceResponse CheckIfUnauthorized(HttpResponseMessage responseMessage)

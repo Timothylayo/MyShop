@@ -6,10 +6,10 @@ public class OrderDTO
 {
     public string UserId { get; set; }
     public string? OrderId { get; set; }
-    
-    [Required, MaxLength(100)]
+
+    [MaxLength(100)]
     public string? Address { get; set; }
-    [Required, Phone]
+    [Phone]
     public string? PhoneNumber { get; set; }
     public string CreatedDate { get; set; }
     public decimal TotalPrice { get; set; }

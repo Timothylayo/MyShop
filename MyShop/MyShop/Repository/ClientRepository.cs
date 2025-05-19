@@ -419,20 +419,9 @@ public class ClientRepository(ApplicationDbContext applicationDb, IConfiguration
         var order = _applicationDb.Orders.Where(x => x.OrderId == order_number).FirstOrDefault();
         if (order != null && order.ShippingStatus != null)
         {
-            shipping_status = order.ShippingStatus.Split("|").ToList();
+            shipping_status = [.. order.ShippingStatus.Split("|")];
         }
         return shipping_status;
-    }
-
-    public OrderDTO GetShippingStatus(string order_number)
-    {
-        var orders = _applicationDb.Orders.Where(x => x.OrderId == order_number)
-                                                       .FirstOrDefault();
-
-        return new OrderDTO()
-        {
-            ShippingStatus = orders!.ShippingStatus
-        };
     }
 
     public List<CartItemDto> GetOrderDetailForCustomer(string customerId, string order_number)
@@ -549,8 +538,6 @@ public class ClientRepository(ApplicationDbContext applicationDb, IConfiguration
         }
         return orders;
     }
-
-
 
     public async Task<ServiceResponse> Checkout(List<CartItemDto> cartItems)
     {

@@ -23,5 +23,9 @@ namespace MyShop.Client.Services.ProductAdminServices
         //Other Services
         Task<List<CartItemDto>?> GetOrderDetails(string order_number);
         Task<List<OrderDTO>?> GetOrders();
+        Task<OrderDTO> GetShippingStatus(string orderId);
+        Task<ServiceResponse> UpdateShippingStatus(ShippingStatusModel shippingStatus);
+
+
     }
 }
