@@ -119,7 +119,6 @@
 }
 
 @code {
-    private int userKey;
     private bool showTrackOrder = false;
     private bool showOrderDetail = false;
     public List<CartItemDto>? myCart { get; set; }
@@ -139,7 +138,12 @@
 
     protected override async Task OnInitializedAsync()
     {
+        isLoading = true;
+        loadingText = "Getting Orders";
+        StateHasChanged();
         customerOrders = await AdminService.GetOrders();
+        isLoading = false;
+        StateHasChanged();
     }
 
     private async Task GetOrderDetail(string order_number)
@@ -163,7 +167,7 @@
         ToggleTrackOrderPopup();
     }
 
-    private async void GetShippingStatus(OrderDTO order)
+    private async Task GetShippingStatus(OrderDTO order)
     {
         var status = await AdminService.GetShippingStatus(order.OrderId!);
         model.ShippingStatus ??= status.ShippingStatus;
